@@ -1,0 +1,67 @@
+# IterativOne® Browser
+Version: 2.0
+Status: 🚀 Active Development
+
+## 🌟 Executive Summary
+The IterativOne® Browser is the world's first Agentic-Native Business Computing Platform, transforming passive browsing into an active, collaborative business-building experience. Built on a foundation of cutting-edge AI and browser technology, it serves as your digital Co-Founder™ in the browser.
+
+## 🎯 Core Value Proposition
+Agentic-Native Architecture: Deeply integrated AI system with strategic and functional layers
+Business-Native Chromium Shell: High-performance, secure browsing optimized for professional workflows
+Dual-Layer Intelligence: Combines strategic partnership with specialized domain expertise
+Seamless Integration: Unified environment for research, analysis, and strategy execution
+## 🏗️ Core Architecture ### 1. Business-Native Chromium Shell
+Enterprise-grade security with content filtering
+Proprietary middleware for real-time DOM and network analysis
+Optimized for intensive research workflows
+### 2. Dual-Layer Agentic System #### Layer 1: Partnership Layer (Co-Founder™)
+Persistent strategic partner with long-term memory
+Manages VestedInterest™ score for relationship depth
+Primary interface for high-level strategy and goal management
+#### Layer 2: Functional Layer (Agent Fleet)
+Specialized agents for domain-specific tasks:
+Agent-MBA: Financial modeling & business planning
+Agent-CFA: Investment analysis & portfolio management
+Agent-CRA: Credit risk assessment & compliance
+Agent-PBA: Requirements engineering
+## 🚀 Key Features ### Partner Hub
+Strategic command center for goal setting and review
+Tracks progress across all active projects
+Central hub for agent deliverables and insights
+### Contextual Agent Sidebar
+Real-time page analysis and summarization
+Direct chat interface with Co-Founder™
+One-click delegation to specialized agents
+### Super-Powered Omnibox
+Unified command interface for web and agent system
+Direct agent commands with ? prefix
+Intelligent search across both web and workspace
+### The Boardroom
+Centralized research repository
+AI-powered pattern recognition
+Cross-reference and synthesis tools
+## 🛠️ Technology Stack
+Core: TypeScript, React 18, Vite
+UI: Tailwind CSS, Lucide Icons
+AI: Custom agent architecture
+Browser: Chromium-based with proprietary extensions
+## 📂 Project Structure
+
+src/
+├── components/            # UI Components
+│   ├── Navigation.tsx     # Main navigation with agent integration
+│   ├── PartnerHub/       # Strategic command center components
+│   ├── AgentSidebar/     # Contextual analysis interface
+│   ├── Boardroom/        # Research management interface
+│   └── shared/           # Reusable UI components
+├── agents/               # Agent implementations
+│   ├── cofounder/        # Partnership layer
+│   └── functional/       # Specialized agents (CFA, MBA, etc.)
+├── services/             # Core services
+│   ├── context/          # Context management
+│   ├── memory/           # Persistent storage and recall
+│   └── api/              # External service integrations
+├── types/                # TypeScript type definitions
+├── App.tsx               # Root application component
+└── main.tsx              # Application entry point
+I 
