@@ -2,16 +2,27 @@ import Hero from './components/Hero';
 import Navigation from './components/Navigation';
 import FeatureSection from './components/FeatureSection';
 import Footer from './components/Footer';
+import BrowserDemo from './pages/BrowserDemo';
 import { useEffect, useState } from 'react';
 
 function App() {
   const [scrollY, setScrollY] = useState(0);
+  const [showDemo, setShowDemo] = useState(false);
 
   useEffect(() => {
     const handleScroll = () => setScrollY(window.scrollY);
     window.addEventListener('scroll', handleScroll);
     return () => window.removeEventListener('scroll', handleScroll);
   }, []);
+
+  useEffect(() => {
+    const params = new URLSearchParams(window.location.search);
+    setShowDemo(params.get('demo') === 'true');
+  }, []);
+
+  if (showDemo) {
+    return <BrowserDemo />;
+  }
 
   return (
     <div className="min-h-screen bg-white">

@@ -44,9 +44,12 @@ export default function Hero({ scrollY }: HeroProps) {
               <span>Download IterativOne</span>
               <ArrowRight className="w-5 h-5 group-hover:translate-x-1 transition" />
             </button>
-            <button className="px-8 py-4 bg-white text-gray-900 rounded-full font-medium text-lg border-2 border-gray-200 hover:border-gray-300 transition">
-              Learn more
-            </button>
+            <a
+              href="?demo=true"
+              className="px-8 py-4 bg-white text-gray-900 rounded-full font-medium text-lg border-2 border-gray-200 hover:border-gray-300 transition"
+            >
+              Try Browser Demo
+            </a>
           </div>
 
           <div className="text-sm text-gray-500 pt-4">
