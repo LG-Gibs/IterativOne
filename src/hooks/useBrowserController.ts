@@ -97,11 +97,18 @@ export function useBrowserController(options: UseBrowserControllerOptions = {}) 
   const eventsGatewayRef = useRef<BrowserEventsGateway | null>(null);
 
   useEffect(() => {
+    const cleanupCallbacks: Array<() => void> = [];
+
     if (mode === 'demo') {
       dataSourceRef.current = new DemoDataSource();
     } else if (mode === 'live' && apiUrl) {
       dataSourceRef.current = new LiveDataSource(apiUrl);
     }
+
+    cleanupCallbacks.push(() => {
+      dataSourceRef.current?.cleanup?.();
+      dataSourceRef.current = null;
+    });
 
     if (mode === 'live' && wsUrl) {
       eventsGatewayRef.current = new BrowserEventsGateway(wsUrl);
@@ -109,16 +116,15 @@ export function useBrowserController(options: UseBrowserControllerOptions = {}) 
 
       const unsubscribe = eventsGatewayRef.current.subscribe(handleBrowserEvent);
 
-      return () => {
+      cleanupCallbacks.push(() => {
         unsubscribe();
         eventsGatewayRef.current?.disconnect();
         eventsGatewayRef.current = null;
-      };
+      });
     }
 
     return () => {
-      dataSourceRef.current?.cleanup?.();
-      dataSourceRef.current = null;
+      cleanupCallbacks.forEach((cleanup) => cleanup());
     };
   }, [mode, apiUrl, wsUrl]);
 
