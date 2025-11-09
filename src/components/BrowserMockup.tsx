@@ -1,5 +1,5 @@
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import {
   ChevronLeft,
   ChevronRight,
@@ -12,85 +12,92 @@ import {
   X,
   Music,
   Volume2,
+  VolumeX,
   Minimize2,
   Maximize2,
   Settings,
   User,
   Sparkles,
 } from 'lucide-react';
+import { useBrowserController } from '../hooks/useBrowserController';
 
-interface Tab {
-  id: string;
-  title: string;
-  url: string;
-  icon: string;
-  isActive: boolean;
-  hasAudio?: boolean;
+interface BrowserMockupProps {
+  mode?: 'demo' | 'live';
+  apiUrl?: string;
+  wsUrl?: string;
 }
 
-export default function BrowserMockup() {
-  const [tabs, setTabs] = useState<Tab[]>([
-    {
-      id: '1',
-      title: 'IterativOne - Home',
-      url: 'iterativone.com',
-      icon: '🏠',
-      isActive: true,
-    },
-    {
-      id: '2',
-      title: 'YouTube Music',
-      url: 'music.youtube.com',
-      icon: '🎵',
-      isActive: false,
-      hasAudio: true,
-    },
-    {
-      id: '3',
-      title: 'Gmail',
-      url: 'mail.google.com',
-      icon: '📧',
-      isActive: false,
-    },
-  ]);
-
-  const [addressBar, setAddressBar] = useState('iterativone.com');
+export default function BrowserMockup({ mode = 'demo', apiUrl, wsUrl }: BrowserMockupProps) {
   const [showMusicPlayer, setShowMusicPlayer] = useState(false);
   const [isDarkMode, setIsDarkMode] = useState(false);
+  const [localAddressBar, setLocalAddressBar] = useState('');
 
-  const activeTab = tabs.find((tab) => tab.isActive);
+  const {
+    tabs,
+    activeTab,
+    addressBar,
+    isLoading,
+    connectionStatus,
+    createTab,
+    closeTab,
+    switchTab,
+    navigate,
+    toggleMute,
+    reconnect,
+  } = useBrowserController({ mode, apiUrl, wsUrl });
 
-  const switchTab = (id: string) => {
-    setTabs(tabs.map((tab) => ({ ...tab, isActive: tab.id === id })));
-    const newActiveTab = tabs.find((tab) => tab.id === id);
-    if (newActiveTab) {
-      setAddressBar(newActiveTab.url);
+  useEffect(() => {
+    setLocalAddressBar(addressBar);
+  }, [addressBar]);
+
+  const handleNavigate = (e: React.KeyboardEvent<HTMLInputElement>) => {
+    if (e.key === 'Enter') {
+      navigate(localAddressBar);
     }
   };
 
-  const closeTab = (id: string) => {
-    const newTabs = tabs.filter((tab) => tab.id !== id);
-    if (tabs.find((tab) => tab.id === id)?.isActive && newTabs.length > 0) {
-      newTabs[0].isActive = true;
-      setAddressBar(newTabs[0].url);
-    }
-    setTabs(newTabs);
+  const handleCloseTab = async (tabId: string, e: React.MouseEvent) => {
+    e.stopPropagation();
+    await closeTab(tabId);
   };
 
-  const addNewTab = () => {
-    const newTab: Tab = {
-      id: Date.now().toString(),
-      title: 'New Tab',
-      url: 'iterativone.com/newtab',
-      icon: '✨',
-      isActive: true,
-    };
-    setTabs([...tabs.map((tab) => ({ ...tab, isActive: false })), newTab]);
-    setAddressBar(newTab.url);
+  const handleToggleMute = async (tabId: string, currentMuted: boolean, e: React.MouseEvent) => {
+    e.stopPropagation();
+    await toggleMute(tabId, !currentMuted);
   };
 
   return (
     <div className="w-full max-w-6xl mx-auto">
+      {/* Connection Status Bar (only in live mode) */}
+      {mode === 'live' && (
+        <div className="mb-4 flex items-center justify-between bg-gray-100 dark:bg-gray-800 rounded-lg p-3">
+          <div className="flex items-center gap-2">
+            <div
+              className={`w-2 h-2 rounded-full ${
+                connectionStatus === 'connected'
+                  ? 'bg-green-500'
+                  : connectionStatus === 'connecting'
+                  ? 'bg-yellow-500 animate-pulse'
+                  : 'bg-red-500'
+              }`}
+            />
+            <span className="text-sm text-gray-600 dark:text-gray-300">
+              {connectionStatus === 'connected'
+                ? 'Connected to Chromium'
+                : connectionStatus === 'connecting'
+                ? 'Connecting...'
+                : 'Disconnected'}
+            </span>
+          </div>
+          <button
+            onClick={reconnect}
+            className="px-3 py-1 bg-blue-500 text-white text-sm rounded hover:bg-blue-600 transition-colors"
+          >
+            Reconnect
+          </button>
+        </div>
+      )}
+
       <div
         className={`rounded-2xl shadow-2xl overflow-hidden border-2 transition-colors duration-300 ${
           isDarkMode ? 'bg-gray-900 border-gray-700' : 'bg-white border-gray-200'
@@ -156,13 +163,19 @@ export default function BrowserMockup() {
                 <span className="text-sm">{tab.icon}</span>
                 <span className="text-xs flex-1 truncate">{tab.title}</span>
                 {tab.hasAudio && (
-                  <Volume2 className="w-3 h-3 text-blue-500 animate-pulse" />
+                  <button
+                    onClick={(e) => handleToggleMute(tab.id, tab.isMuted || false, e)}
+                    className="hover:bg-gray-200 dark:hover:bg-gray-600 rounded p-0.5"
+                  >
+                    {tab.isMuted ? (
+                      <VolumeX className="w-3 h-3 text-gray-500" />
+                    ) : (
+                      <Volume2 className="w-3 h-3 text-blue-500 animate-pulse" />
+                    )}
+                  </button>
                 )}
                 <button
-                  onClick={(e) => {
-                    e.stopPropagation();
-                    closeTab(tab.id);
-                  }}
+                  onClick={(e) => handleCloseTab(tab.id, e)}
                   className="opacity-0 group-hover:opacity-100 transition"
                 >
                   <X className="w-3 h-3" />
@@ -170,7 +183,7 @@ export default function BrowserMockup() {
               </div>
             ))}
             <button
-              onClick={addNewTab}
+              onClick={() => createTab()}
               className={`p-2 rounded-lg transition ${
                 isDarkMode
                   ? 'hover:bg-gray-700 text-gray-300'
@@ -208,13 +221,14 @@ export default function BrowserMockup() {
               <ChevronRight className="w-4 h-4" />
             </button>
             <button
+              onClick={() => activeTab && navigate(activeTab.url)}
               className={`p-2 rounded-lg transition ${
                 isDarkMode
                   ? 'hover:bg-gray-700 text-gray-300'
                   : 'hover:bg-gray-100 text-gray-700'
               }`}
             >
-              <RotateCw className="w-4 h-4" />
+              <RotateCw className={`w-4 h-4 ${isLoading ? 'animate-spin' : ''}`} />
             </button>
             <button
               className={`p-2 rounded-lg transition ${
@@ -237,11 +251,14 @@ export default function BrowserMockup() {
             <Lock className="w-4 h-4 text-green-500" />
             <input
               type="text"
-              value={addressBar}
-              onChange={(e) => setAddressBar(e.target.value)}
+              value={localAddressBar}
+              onChange={(e) => setLocalAddressBar(e.target.value)}
+              onKeyDown={handleNavigate}
+              onFocus={() => setLocalAddressBar(addressBar)}
               className={`flex-1 bg-transparent outline-none text-sm ${
                 isDarkMode ? 'text-gray-200' : 'text-gray-700'
               }`}
+              placeholder="Search or enter address"
             />
             <Star className="w-4 h-4 text-gray-400" />
           </div>
