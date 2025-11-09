@@ -1,13 +1,40 @@
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import BrowserMockup from '../components/BrowserMockup';
-import { ArrowLeft, Settings, Zap, Plug } from 'lucide-react';
+import { BrowserProvider } from '../context/BrowserContext';
+import { browserAgentBridge } from '../services/BrowserAgentBridge';
+import { ArrowLeft, Settings, Zap, Plug, Brain } from 'lucide-react';
 
 export default function BrowserDemo() {
-  const [mode, setMode] = useState<'demo' | 'live'>('demo');
+  const [mode, setMode] = useState<'demo' | 'live' | 'agent-integrated'>('demo');
   const [apiUrl, setApiUrl] = useState('http://localhost:9222');
   const [wsUrl, setWsUrl] = useState('ws://localhost:9223');
   const [showConfig, setShowConfig] = useState(false);
+  const [agentBackendEnabled, setAgentBackendEnabled] = useState(true);
+  const [sessionInitialized, setSessionInitialized] = useState(false);
+
+  useEffect(() => {
+    const initializeAgent = async () => {
+      if (agentBackendEnabled && !sessionInitialized) {
+        try {
+          await browserAgentBridge.initialize(apiUrl, wsUrl);
+          setSessionInitialized(true);
+        } catch (error) {
+          console.error('Failed to initialize agent backend:', error);
+        }
+      }
+    };
+
+    if (mode === 'demo' || mode === 'agent-integrated') {
+      initializeAgent();
+    }
+  }, [mode, agentBackendEnabled, sessionInitialized, apiUrl, wsUrl]);
+
+  const getDataSourceMode = () => {
+    if (mode === 'demo') return 'demo';
+    if (mode === 'live' && agentBackendEnabled) return 'agent-integrated';
+    return 'live';
+  };
 
   return (
     <div className="min-h-screen bg-gradient-to-b from-gray-50 to-white py-12 px-4">
@@ -49,9 +76,22 @@ export default function BrowserDemo() {
                   Live Mode
                 </div>
               </button>
+              <button
+                onClick={() => setMode('agent-integrated')}
+                className={`px-4 py-2 rounded-md text-sm font-medium transition-all ${
+                  mode === 'agent-integrated'
+                    ? 'bg-blue-500 text-white shadow-sm'
+                    : 'text-gray-600 hover:text-gray-900'
+                }`}
+              >
+                <div className="flex items-center gap-2">
+                  <Brain className="w-4 h-4" />
+                  Agent Mode
+                </div>
+              </button>
             </div>
 
-            {mode === 'live' && (
+            {(mode === 'live' || mode === 'agent-integrated') && (
               <button
                 onClick={() => setShowConfig(!showConfig)}
                 className="p-2 bg-white rounded-lg shadow-sm border border-gray-200 hover:bg-gray-50 transition-colors"
@@ -59,12 +99,26 @@ export default function BrowserDemo() {
                 <Settings className="w-5 h-5 text-gray-600" />
               </button>
             )}
+
+            {mode !== 'demo' && (
+              <button
+                onClick={() => setAgentBackendEnabled(!agentBackendEnabled)}
+                className={`p-2 rounded-lg shadow-sm border transition-all ${
+                  agentBackendEnabled
+                    ? 'bg-green-100 border-green-300 text-green-600'
+                    : 'bg-gray-100 border-gray-300 text-gray-600'
+                }`}
+                title={agentBackendEnabled ? 'Agent backend enabled' : 'Agent backend disabled'}
+              >
+                <Brain className="w-5 h-5" />
+              </button>
+            )}
           </div>
         </div>
 
-        {mode === 'live' && showConfig && (
+        {(mode === 'live' || mode === 'agent-integrated') && showConfig && (
           <div className="bg-white rounded-lg shadow-md p-6 mb-8 border border-gray-200">
-            <h3 className="text-lg font-semibold mb-4">Chromium API Configuration</h3>
+            <h3 className="text-lg font-semibold mb-4">Configuration</h3>
             <div className="space-y-4">
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-2">
@@ -107,11 +161,30 @@ export default function BrowserDemo() {
           <p className="text-xl text-gray-600 max-w-3xl mx-auto">
             {mode === 'demo'
               ? 'Experience the interactive demo with simulated browser controls and tab management.'
-              : 'Connect to a live Chromium instance to control an actual browser remotely.'}
+              : mode === 'agent-integrated'
+                ? 'Agent-powered browser control with persistent session management and task delegation.'
+                : 'Connect to a live Chromium instance to control an actual browser remotely.'}
           </p>
+          {(mode === 'live' || mode === 'agent-integrated') && (
+            <p className="text-sm text-gray-500 mt-2">
+              Agent Backend: <span className={agentBackendEnabled ? 'text-green-600 font-medium' : 'text-gray-400'}>
+                {agentBackendEnabled ? 'Enabled' : 'Disabled'}
+              </span>
+              {sessionInitialized && agentBackendEnabled && (
+                <span className="text-green-600"> ✓ Connected</span>
+              )}
+            </p>
+          )}
         </div>
 
-        <BrowserMockup mode={mode} apiUrl={mode === 'live' ? apiUrl : undefined} wsUrl={mode === 'live' ? wsUrl : undefined} />
+        <BrowserProvider
+          mode={getDataSourceMode() as 'demo' | 'live' | 'agent-integrated'}
+          apiUrl={mode !== 'demo' ? apiUrl : undefined}
+          wsUrl={mode !== 'demo' ? wsUrl : undefined}
+          enableAgentBackend={agentBackendEnabled}
+        >
+          <BrowserMockup mode={getDataSourceMode()} apiUrl={mode !== 'demo' ? apiUrl : undefined} wsUrl={mode !== 'demo' ? wsUrl : undefined} />
+        </BrowserProvider>
 
         <div className="mt-16 grid md:grid-cols-3 gap-8">
           <div className="text-center">

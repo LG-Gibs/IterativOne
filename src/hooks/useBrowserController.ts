@@ -8,7 +8,9 @@ import type {
 } from '../types/browser';
 import { DemoDataSource } from '../services/DemoDataSource';
 import { LiveDataSource } from '../services/LiveDataSource';
+import { AgentIntegratedDataSource } from '../services/AgentIntegratedDataSource';
 import { BrowserEventsGateway } from '../services/BrowserEventsGateway';
+import { agentBackendService } from '../services/AgentBackendService';
 
 type BrowserAction =
   | { type: 'SET_TABS'; payload: Tab[] }
@@ -78,13 +80,14 @@ function browserReducer(state: BrowserState, action: BrowserAction): BrowserStat
 }
 
 interface UseBrowserControllerOptions {
-  mode?: 'demo' | 'live';
+  mode?: 'demo' | 'live' | 'agent-integrated';
   apiUrl?: string;
   wsUrl?: string;
+  enableAgentBackend?: boolean;
 }
 
 export function useBrowserController(options: UseBrowserControllerOptions = {}) {
-  const { mode = 'demo', apiUrl, wsUrl } = options;
+  const { mode = 'demo', apiUrl, wsUrl, enableAgentBackend = true } = options;
 
   const [state, dispatch] = useReducer(browserReducer, {
     tabs: [],
@@ -99,10 +102,28 @@ export function useBrowserController(options: UseBrowserControllerOptions = {}) 
   useEffect(() => {
     const cleanupCallbacks: Array<() => void> = [];
 
+    const initializeAgentBackend = async () => {
+      if (enableAgentBackend) {
+        try {
+          await agentBackendService.initializeSession(apiUrl, wsUrl);
+          await agentBackendService.initializeAgent('co-founder', 'cofounder');
+        } catch (error) {
+          console.error('Failed to initialize agent backend:', error);
+        }
+      }
+    };
+
     if (mode === 'demo') {
       dataSourceRef.current = new DemoDataSource();
+      initializeAgentBackend();
     } else if (mode === 'live' && apiUrl) {
-      dataSourceRef.current = new LiveDataSource(apiUrl);
+      dataSourceRef.current = enableAgentBackend
+        ? new AgentIntegratedDataSource(apiUrl)
+        : new LiveDataSource(apiUrl);
+      initializeAgentBackend();
+    } else if (mode === 'agent-integrated' && apiUrl) {
+      dataSourceRef.current = new AgentIntegratedDataSource(apiUrl);
+      initializeAgentBackend();
     }
 
     cleanupCallbacks.push(() => {
@@ -110,7 +131,7 @@ export function useBrowserController(options: UseBrowserControllerOptions = {}) 
       dataSourceRef.current = null;
     });
 
-    if (mode === 'live' && wsUrl) {
+    if ((mode === 'live' || mode === 'agent-integrated') && wsUrl) {
       eventsGatewayRef.current = new BrowserEventsGateway(wsUrl);
       eventsGatewayRef.current.connect();
 
@@ -126,7 +147,7 @@ export function useBrowserController(options: UseBrowserControllerOptions = {}) 
     return () => {
       cleanupCallbacks.forEach((cleanup) => cleanup());
     };
-  }, [mode, apiUrl, wsUrl]);
+  }, [mode, apiUrl, wsUrl, enableAgentBackend]);
 
   useEffect(() => {
     loadInitialTabs();
