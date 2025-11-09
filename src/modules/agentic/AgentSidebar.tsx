@@ -1,19 +1,7 @@
 import { useState } from 'react';
 import { Send, X, Minimize2 } from 'lucide-react';
-import { CoFounderAgent } from '../../agents/CoFounderAgent';
-import { MBAAgent } from '../../agents/functional/MBAAgent';
-import { CFAAgent } from '../../agents/functional/CFAAgent';
-import { CRAAgent } from '../../agents/functional/CRAAgent';
-import { PBAAgent } from '../../agents/functional/PBAAgent';
-import type { Message } from '../../types/agent';
-
-const agents = [
-  new CoFounderAgent(),
-  new MBAAgent(),
-  new CFAAgent(),
-  new CRAAgent(),
-  new PBAAgent(),
-];
+import { useAgentStore } from '../../store/agentStore';
+import { useAgentPlatform } from '../../context/AgentPlatformProvider';
 
 interface AgentSidebarProps {
   isOpen: boolean;
@@ -21,48 +9,16 @@ interface AgentSidebarProps {
 }
 
 export default function AgentSidebar({ isOpen, onClose }: AgentSidebarProps) {
-  const [selectedAgent, setSelectedAgent] = useState(agents[0]);
-  const [messages, setMessages] = useState<Message[]>([
-    {
-      id: '1',
-      role: 'agent',
-      content: `Hi! I'm ${agents[0].name}, your ${agents[0].title}. I'm here to help you build and grow your business. What would you like to work on today?`,
-      timestamp: new Date(),
-      agentRole: agents[0].role,
-    },
-  ]);
+  const { agents, activeAgent, setActiveAgent, conversationHistory } = useAgentStore();
+  const { queryAgent } = useAgentPlatform();
   const [input, setInput] = useState('');
   const [isMinimized, setIsMinimized] = useState(false);
 
   const handleSend = async () => {
-    if (!input.trim()) return;
-
-    const userMessage: Message = {
-      id: Date.now().toString(),
-      role: 'user',
-      content: input,
-      timestamp: new Date(),
-    };
-
-    setMessages([...messages, userMessage]);
+    if (!input.trim() || !activeAgent) return;
+    const query = input;
     setInput('');
-
-    const response = await selected Agent.processMessage(input, {
-      currentUrl: window.location.href,
-      activeProjects: [],
-      recentGoals: [],
-      conversationHistory: messages,
-    });
-
-    const agentMessage: Message = {
-      id: (Date.now() + 1).toString(),
-      role: 'agent',
-      content: response,
-      timestamp: new Date(),
-      agentRole: selectedAgent.role,
-    };
-
-    setMessages((prev) => [...prev, agentMessage]);
+    await queryAgent(activeAgent.name, query);
   };
 
   if (!isOpen) return null;
@@ -105,18 +61,9 @@ export default function AgentSidebar({ isOpen, onClose }: AgentSidebarProps) {
               {agents.map((agent) => (
                 <button
                   key={agent.id}
-                  onClick={() => {
-                    setSelectedAgent(agent);
-                    setMessages([{
-                      id: Date.now().toString(),
-                      role: 'agent',
-                      content: `Hi! I'm ${agent.name}, your ${agent.title}. ${agent.description}`,
-                      timestamp: new Date(),
-                      agentRole: agent.role,
-                    }]);
-                  }}
+                  onClick={() => setActiveAgent(agent)}
                   className={`flex flex-col items-center p-2 rounded-lg transition ${
-                    selectedAgent.id === agent.id
+                    activeAgent?.id === agent.id
                       ? 'bg-blue-100 border-2 border-blue-500'
                       : 'bg-gray-100 hover:bg-gray-200'
                   }`}
@@ -129,7 +76,7 @@ export default function AgentSidebar({ isOpen, onClose }: AgentSidebarProps) {
           </div>
 
           <div className="flex-1 overflow-y-auto p-4 space-y-4" style={{ height: 'calc(100vh - 220px)' }}>
-            {messages.map((message) => (
+            {conversationHistory.map((message) => (
               <div
                 key={message.id}
                 className={`flex ${message.role === 'user' ? 'justify-end' : 'justify-start'}`}
@@ -157,7 +104,7 @@ export default function AgentSidebar({ isOpen, onClose }: AgentSidebarProps) {
                 value={input}
                 onChange={(e) => setInput(e.target.value)}
                 onKeyDown={(e) => e.key === 'Enter' && handleSend()}
-                placeholder={`Ask ${selectedAgent.name}...`}
+                placeholder={`Ask ${activeAgent?.name || 'Agent'}...`}
                 className="flex-1 px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
               />
               <button

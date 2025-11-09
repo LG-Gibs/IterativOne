@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { Menu, X, ChevronDown, Globe } from 'lucide-react';
+import { Menu, X, Globe } from 'lucide-react';
 
 export default function Navigation() {
   const [isScrolled, setIsScrolled] = useState(false);
@@ -30,24 +30,18 @@ export default function Navigation() {
             </a>
 
             <div className="hidden md:flex items-center space-x-6">
-              <a href="#music-video" className="text-sm text-gray-700 hover:text-gray-900 transition">
+              <a href="#" className="text-sm text-gray-700 hover:text-gray-900 transition">
                 Features
               </a>
-              <a href="#themes" className="text-sm text-gray-700 hover:text-gray-900 transition">
-                Themes
+              <a href="#partner-hub" className="text-sm font-semibold text-blue-600 hover:text-blue-700 transition">
+                Partner Hub
               </a>
-              <a href="#tabs" className="text-sm text-gray-700 hover:text-gray-900 transition">
-                Tab Islands
+              <a href="#boardroom" className="text-sm font-semibold text-purple-600 hover:text-purple-700 transition">
+                Boardroom
               </a>
-              <a href="#ai" className="text-sm text-gray-700 hover:text-gray-900 transition">
-                AI Assistant
+              <a href="?demo=true" className="text-sm text-gray-700 hover:text-gray-900 transition">
+                Browser Demo
               </a>
-              <div className="relative group">
-                <button className="flex items-center space-x-1 text-sm text-gray-700 hover:text-gray-900 transition">
-                  <span>More</span>
-                  <ChevronDown className="w-4 h-4" />
-                </button>
-              </div>
             </div>
           </div>
 

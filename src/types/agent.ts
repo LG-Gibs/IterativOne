@@ -31,6 +31,9 @@ export interface Agent {
   avatar: string;
   capabilities: AgentCapability[];
   isActive: boolean;
+  processMessage(message: string, context: AgentContext): Promise<string>;
+  activate(): void;
+  deactivate(): void;
 }
 
 export interface Project {

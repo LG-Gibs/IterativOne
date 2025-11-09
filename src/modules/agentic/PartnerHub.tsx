@@ -1,22 +1,12 @@
-import { useState } from 'react';
 import { Target, TrendingUp, CheckCircle, Clock, ArrowRight, Brain } from 'lucide-react';
-import { CoFounderAgent } from '../../agents/CoFounderAgent';
-
-const cofounder = new CoFounderAgent();
+import { useAgentStore } from '../../store/agentStore';
+import { useAgentPlatform } from '../../context/AgentPlatformProvider';
 
 export default function PartnerHub() {
-  const [vestedInterestScore] = useState(78);
+  const { goals, projects, vestedInterestScore, agents } = useAgentStore();
+  const { openAgentSidebar } = useAgentPlatform();
   
-  const goals = [
-    { id: '1', title: 'Launch MVP for SaaS product', status: 'in-progress' as const, priority: 'high' as const, progress: 65 },
-    { id: '2', title: 'Secure seed funding', status: 'in-progress' as const, priority: 'high' as const, progress: 40 },
-    { id: '3', title: 'Build landing page', status: 'completed' as const, priority: 'medium' as const, progress: 100 },
-  ];
-
-  const projects = [
-    { id: '1', name: 'SaaS Platform', status: 'active' as const, agents: ['mba', 'pba'], progress: 65 },
-    { id: '2', name: 'Market Research', status: 'active' as const, agents: ['mba', 'cfa'], progress: 80 },
-  ];
+  const cofounder = agents.find(a => a.role === 'cofounder');
 
   return (
     <div className="min-h-screen bg-gradient-to-b from-gray-50 to-white">
@@ -142,23 +132,28 @@ export default function PartnerHub() {
           </div>
         </div>
 
-        <div className="mt-8 bg-gradient-to-r from-purple-50 to-blue-50 rounded-2xl p-8 border border-purple-200">
-          <div className="flex items-start gap-4">
-            <div className="text-4xl">{cofounder.avatar}</div>
-            <div className="flex-1">
-              <h3 className="text-xl font-bold text-gray-900 mb-2">{cofounder.name} - Your {cofounder.title}</h3>
-              <p className="text-gray-700 mb-4">{cofounder.description}</p>
-              <div className="flex gap-2">
-                <button className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition">
-                  Start Conversation
-                </button>
-                <button className="px-4 py-2 bg-white text-gray-700 rounded-lg hover:bg-gray-50 transition border border-gray-200">
-                  Review Strategy
-                </button>
+        {cofounder && (
+          <div className="mt-8 bg-gradient-to-r from-purple-50 to-blue-50 rounded-2xl p-8 border border-purple-200">
+            <div className="flex items-start gap-4">
+              <div className="text-4xl">{cofounder.avatar}</div>
+              <div className="flex-1">
+                <h3 className="text-xl font-bold text-gray-900 mb-2">{cofounder.name} - Your {cofounder.title}</h3>
+                <p className="text-gray-700 mb-4">{cofounder.description}</p>
+                <div className="flex gap-2">
+                  <button
+                    onClick={openAgentSidebar}
+                    className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition"
+                  >
+                    Start Conversation
+                  </button>
+                  <button className="px-4 py-2 bg-white text-gray-700 rounded-lg hover:bg-gray-50 transition border border-gray-200">
+                    Review Strategy
+                  </button>
+                </div>
               </div>
             </div>
           </div>
-        </div>
+        )}
       </div>
     </div>
   );
